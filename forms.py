@@ -6,7 +6,7 @@ from wtforms import validators
 class UserForm(Form):
     matricula=IntegerField("Matricula")
     nombre=StringField('Nombre')
-    apaterno=StringField('Apeterno')
+    apaterno=StringField('Apaterno')
     amaterno=StringField('Amaterno')
     edad=IntegerField("Edad")
     correo=EmailField('Correo')

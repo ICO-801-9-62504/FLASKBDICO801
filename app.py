@@ -1,81 +1,143 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask import flash
 from flask_wtf.csrf import CSRFProtect
+from flask_migrate import Migrate
 from config import DevelopmentConfig
-from models import db, Alumnos, Maestros 
 import forms
 
-app = Flask(__name__)
+from models import db, Alumnos, Maestros
+from forms import UserForm, MaestroForm
+
+# 1. IMPORTAMOS EL MÓDULO (BLUEPRINT) DEL PROFE
+from maestros import maestros_bp
+
+# 2. INICIALIZAMOS LA APP 
+app = Flask(__name__)  
 app.config.from_object(DevelopmentConfig)
 db.init_app(app)
+migrate = Migrate(app, db)
 csrf = CSRFProtect(app)
 
+# 3. CONECTAMOS EL MÓDULO A TU APP PRINCIPAL
+app.register_blueprint(maestros_bp)
 
+# ==========================================
+# RUTAS PRINCIPALES
+# ==========================================
 
-@app.route("/", methods=["GET","POST"])
+@app.route("/", methods=["GET", "POST"])
 @app.route("/index")
 def index():
-    create_alumno = forms.UserForm(request.form)
-    # select * alumnos alumnos
-    alumno = Alumnos.query.all()
-    return render_template("index.html", form=create_alumno, alumno=alumno)
+    # Menú principal (solo muestra los botones de alumnos y maestros)
+    return render_template("index.html")
+
+# Cambiamos el nombre de la función a vista_alumnos para evitar el error con el modelo Alumnos
+@app.route("/alumnos", methods=["GET", "POST"])
+def vista_alumnos(): 
+    create_form = forms.UserForm(request.form)
     
+    # Mandamos a los alumnos a la nueva tabla
+    lista_alumnos = Alumnos.query.all()
+    return render_template("Alumnos.html", form=create_form, alumno=lista_alumnos)
 
-@app.route("/usuarios", methods=["GET","POST"])
-def usuario():
-    mat = 0
-    nom = ''
-    apa = ''
-    ama = ''
-    edad = 0
-    email = ''
-    usuarios_clas = forms.UserForm(request.form)
+# NUEVA RUTA: Para el formulario de insertar alumno
+@app.route("/insertar_alumno", methods=["GET", "POST"])
+def insertar_alumno():
+    create_form = forms.UserForm(request.form)
     
-    if request.method == 'POST':
-        mat = usuarios_clas.matricula.data
-        nom = usuarios_clas.nombre.data
-        apa = usuarios_clas.apaterno.data
-        ama = usuarios_clas.amaterno.data
-        edad = usuarios_clas.edad.data
-        email = usuarios_clas.correo.data
+    if request.method == "POST":
+        alum = Alumnos(
+            nombre=create_form.nombre.data,
+            amaterno=create_form.amaterno.data,
+            apaterno=create_form.apaterno.data,
+            edad=create_form.edad.data,
+            correo=create_form.correo.data,
+        )
+        db.session.add(alum)
+        db.session.commit()
+        return redirect(url_for("vista_alumnos"))
+        
+    return render_template("insertar_alumno.html", form=create_form)
+
+@app.route("/detalles", methods=["GET", "POST"])
+def detalles():
+    create_form = forms.UserForm(request.form)
+    if request.method == "GET":
+        id = request.args.get("id")
+        alum1 = db.session.query(Alumnos).filter(Alumnos.id == id).first()
+        nombre = alum1.nombre
+        apaterno = alum1.apaterno
+        amaterno = alum1.amaterno
+        edad = alum1.edad
+        correo = alum1.correo
+
+    return render_template(
+        "detalles.html",
+        id=id,
+        nombre=nombre,
+        apaterno=apaterno,
+        amaterno=amaterno,
+        edad=edad,
+        correo=correo,
+    )
+
+@app.route("/modificar", methods=["GET", "POST"])
+def modificar():
+    create_form = forms.UserForm(request.form)
+    if request.method == "GET":
+        id = request.args.get("id")
+        alum1 = db.session.query(Alumnos).filter(Alumnos.id == id).first()
+        create_form.id.data = request.args.get("id")
+        create_form.nombre.data = alum1.nombre
+        create_form.apaterno.data = alum1.apaterno
+        create_form.amaterno.data = alum1.amaterno
+        create_form.edad.data = alum1.edad
+        create_form.correo.data = alum1.correo
+
+    if request.method == "POST":
+        id = request.args.get("id")
+        alum1 = db.session.query(Alumnos).filter(Alumnos.id == id).first()
+        alum1.id = id
+        alum1.nombre = create_form.nombre.data
+        alum1.apaterno = create_form.apaterno.data
+        alum1.amaterno = create_form.amaterno.data
+        alum1.edad = create_form.edad.data
+        alum1.correo = create_form.correo.data
+        db.session.add(alum1)
+        db.session.commit()
+        # Modificado: ahora redirige a vista_alumnos
+        return redirect(url_for("vista_alumnos"))
     
-    return render_template('usuarios.html', form=usuarios_clas, mat=mat,
-                           nom=nom, apa=apa, ama=ama, edad=edad, email=email)
+    return render_template("modificar.html", form=create_form)
 
-
-
-@app.route("/maestros", methods=["GET","POST"])
-def maestros():
-    create_maestro = forms.MaestroForm(request.form)
+@app.route("/eliminar", methods=["GET", "POST"])
+def eliminar():
+    create_form = forms.UserForm(request.form)
+    if request.method == "GET":
+        id = request.args.get("id")
+        alum1 = db.session.query(Alumnos).filter(Alumnos.id == id).first()
+        create_form.id.data = request.args.get("id")
+        create_form.nombre.data = alum1.nombre
+        create_form.apaterno.data = alum1.apaterno
+        create_form.amaterno.data = alum1.amaterno
+        create_form.edad.data = alum1.edad
+        create_form.correo.data = alum1.correo
+        
+    if request.method == "POST":
+        id = request.form.get("id")
+        alum = Alumnos.query.get_or_404(id)
+        db.session.delete(alum)
+        db.session.commit()
+        # Modificado: ahora redirige a vista_alumnos
+        return redirect(url_for("vista_alumnos"))
     
-    maestro = Maestros.query.all()
-    return render_template("maestros.html", form=create_maestro, maestro=maestro)
+    return render_template("eliminar.html", form=create_form)
 
-@app.route("/datos_maestros", methods=["GET","POST"])
-def datos_maestro():
-    mat = 0
-    nom = ''
-    ape = ''
-    esp = ''
-    correo = ''
-    maestros_clas = forms.MaestroForm(request.form)
-    
-    if request.method == 'POST':
-        mat = maestros_clas.matricula.data
-        nom = maestros_clas.nombre.data
-        ape = maestros_clas.apellidos.data
-        esp = maestros_clas.especialidad.data
-        correo = maestros_clas.email.data
-    
-    return render_template('datos_maestros.html', form=maestros_clas, mat=mat,
-                           nom=nom, ape=ape, esp=esp, correo=correo)
-
-
-
-if __name__ == '__main__':
-   
+# ==========================================
+# INICIO DE LA APLICACIÓN
+# ==========================================
+if __name__ == "__main__":
+    csrf.init_app(app)
     with app.app_context():
         db.create_all()
-    
-    
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

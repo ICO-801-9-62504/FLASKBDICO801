@@ -1,0 +1,56 @@
+{% extends "layout.html" %} {% block container %} {% import "macros.html" as macros %}
+
+<div class="py-32 relative overflow-x-auto sm:rounded-lg px-4">
+  <div class="max-w-md mx-auto mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">¿Eliminar este maestro?</h2>
+    <p class="text-red-600 font-medium mt-1">Los datos se borrarán permanentemente y no se podrán recuperar.</p>
+  </div>
+
+  {# CAMBIO 1: Agregamos el id al url_for para que sepa A QUIÉN borrar #}
+  <form action="{{ url_for('maestros.eliminar', id=maestro.matricula) }}" method="POST" class="max-w-md mx-auto">
+    
+    {# CAMBIO 2: Solo un token CSRF (el de WTForms) para evitar errores de Bad Request #}
+    {{ form.csrf_token }}
+
+    {% set input_class = "block p-2.5 w-full text-sm text-gray-600 bg-gray-100 rounded-lg border border-gray-300 cursor-not-allowed focus:ring-red-500 focus:border-red-500 shadow-sm" %}
+
+    {# CAMBIO 3: Usamos 'maestro.matricula' para mostrar el ID real en el input #}
+    <div class="relative z-0 w-full mb-5 group">
+        <label class="block mb-2 text-sm font-medium text-gray-700">Matrícula</label>
+        <input type="text" value="{{ maestro.matricula }}" class="{{ input_class }}" readonly>
+    </div>
+
+    <div class="relative z-0 w-full mb-5 group">
+      {{ macros.campoNuevo(form.nombre, class=input_class, readonly=True) }}
+    </div>
+
+    <div class="relative z-0 w-full mb-5 group">
+      {{ macros.campoNuevo(form.apellidos, class=input_class, readonly=True) }}
+    </div>
+
+    <div class="relative z-0 w-full mb-5 group">
+      {{ macros.campoNuevo(form.especialidad, class=input_class, readonly=True) }}
+    </div>
+
+    <div class="relative z-0 w-full mb-5 group">
+      {{ macros.campoNuevo(form.email, class=input_class, readonly=True) }}
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4 mt-6">
+      <button
+        type="submit"
+        class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-colors shadow-md cursor-pointer"
+      >
+        Confirmar Eliminar
+      </button>
+      
+      <a
+        href="{{ url_for('maestros.maestros') }}"
+        class="text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-colors flex items-center justify-center"
+      >
+        Cancelar
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

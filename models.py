@@ -18,7 +18,8 @@ class Alumnos(db.Model):
         "Curso", secondary="inscripciones", back_populates="alumnos"
     )
 
-    def __init__(self, nombre, apaterno, amaterno, edad, correo):
+    def __init__(self,id, nombre, apaterno, amaterno, edad, correo):
+        self.id = id
         self.nombre = nombre
         self.apaterno = apaterno
         self.amaterno = amaterno

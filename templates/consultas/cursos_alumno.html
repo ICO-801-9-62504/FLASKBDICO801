@@ -1,0 +1,44 @@
+{% extends 'layout.html' %}
+{% block container %}
+<div class="w-full max-w-3xl p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Cursos por Alumno</h2>
+    <p class="text-gray-500 text-sm mb-6">Selecciona un alumno para ver los cursos en los que está inscrito.</p>
+
+    <form method="POST" action="{{ url_for('consultas.cursos_por_alumno') }}">
+        
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-4">
+            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Alumno</label>
+            <select name="alumno_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">Selecciona un alumno...</option>
+                {% for alumno in alumnos %}
+                    <option value="{{ alumno.id }}" {% if seleccionado and seleccionado.id|string == alumno.id|string %}selected{% endif %}>
+                        {{ alumno.nombre }} {{ alumno.apaterno }} {{ alumno.amaterno }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-6 py-2.5 text-center">Consultar</button>
+    </form>
+
+    {% if seleccionado %}
+    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">Cursos de {{ seleccionado.nombre }}</h3>
+        {% if resultados %}
+            <div class="space-y-4">
+                {% for curso in resultados %}
+                <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600">
+                    <h4 class="font-bold text-gray-900 dark:text-white">{{ curso.nombre }}</h4>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ curso.descripcion }}</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">Docente: {{ curso.maestro.nombre }} {{ curso.maestro.apellidos }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="p-4 text-sm text-gray-600 bg-gray-100 rounded-lg dark:bg-gray-700 dark:text-gray-300">No hay cursos inscritos.</div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

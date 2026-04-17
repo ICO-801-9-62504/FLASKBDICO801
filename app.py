@@ -14,6 +14,7 @@ from maestros import maestros_bp
 from alumnos import alumnos_bp 
 from cursos import cursos_bp           # <-- NUEVO: Importamos el de cursos
 from inscripciones import ins_bp       # <-- NUEVO: Importamos el de inscripciones
+from consultas import consultas_bp
 
 # 2. INICIALIZAMOS LA APP 
 app = Flask(__name__)  
@@ -27,6 +28,7 @@ app.register_blueprint(maestros_bp)
 app.register_blueprint(alumnos_bp) 
 app.register_blueprint(cursos_bp)      # <-- NUEVO: Lo registramos en la app
 app.register_blueprint(ins_bp)         # <-- NUEVO: Lo registramos en la app
+app.register_blueprint(consultas_bp)
 
 # ==========================================
 # RUTAS PRINCIPALES
